@@ -1,27 +1,25 @@
 #!/opt/local/bin/python
 # TODO: help - return all possible options
 from SocketServer import *
+import socket
 import threading
 import sys
 
 
 class Served(object):
     def __init__(self):
-        print "Initializing Server"
-        # List of client connections to make sure we close properly
-        self.connections = list()
+        print ">> Initializing Server"
 
         # The socket server (listens for new connections)
         try:
             self.server = ThreadingTCPServer(('127.0.0.1',9090),ConnectionHandler)
         except:
-            print "Could not initialize the server. The port may already be in use"
+            print ">> Could not initialize the server. The port may already be in use"
 
-        self.server.served = self # Add a reference to this object
+        # Add reference to this object, so we can make calls to the Served class
+        self.server.served = self 
 
         # Run the server on a seperate thread
-#        self.running = True;
-#        self.server_thread = threading.Thread(target=self._conn_listener)
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.daemon = True
         self.server_thread.start()
@@ -30,33 +28,8 @@ class Served(object):
         self.shutdown()
 
     def shutdown(self):
-#        self.running = False;
-        print "Cleaning up server process"
+        print ">> Cleaning up server process, waiting for connections to die"
         self.server.shutdown()
-
-#     def _conn_listener(self):
-#         """ Listens for incomming TCP connections """
-#         try:
-# #        server.serve_forever()
-#             print "listening"
-#             while self.running:
-#                 # Keep track of connections
-#                 request, addr = self.server.get_request()
-#                 self.server.process_request(request,addr)
-#                 self.connections.append(request)
-#         except:
-#             pass
-#         finally:
-#             print "shutting down"
-#             self.server.server_close()
-# 
-#             # Close down connection threads
-#             print "closing %d connections"%(len(self.connections))
-#             for c in self.connections:
-#                 self.server.close_request(c)
-#         print "Shutdown complete"
-# 
-
 
     def _exe(self,text):
         # Turn text string into list
@@ -87,32 +60,31 @@ class ThreadingTCPServer(ThreadingMixIn, TCPServer): pass
 # Handles the connections
 class ConnectionHandler(StreamRequestHandler):
     def setup(self):
-        print "setup connection"
-        print "served=",self.server.served
+        print ">> Connection Established"
         self.running = True
 
     def handle(self):
-        print "handling"
         conn = self.request
-        # TODO Fix closing this connection smoothly
         # TODO Fix text buffer size 1024 overflows
-        while self.running:
+        while True:
+            # Listen for incoming data - detect broken connections and terminate
             data = conn.recv(1024)
-            if data == "":
+            if not data:
+                break
+
+            # Detect empty strings - don't try to execute them
+            if data == "\n":
                 continue
-            result = self.server.served._exe(data)
-            if result:
-                conn.send(str(result)+"\n")
-        print "ending"
+
+            # Execute the command and send back any returned values
+            try:
+                result = self.server.served._exe(data)
+                if result:
+                    conn.send(str(result)+"\n")
+            except Exception, e:
+                print ">>",e
 
     def finish(self):
-        print "Closing connection"
+        print ">> Closing Connection"
         self.running = False
-
-
-
-if __name__ == "__main__":
-    print "one"
-    connections = list()
-    server = ThreadingTCPServer(('127.0.0.1',9090),ConnectionHandler)
 
