@@ -1,5 +1,36 @@
-#!/opt/local/bin/python
+# Served.py - Convert python classes into tcp servers
+# [db] Dan Brooks 
+# mrdanbrooks@gmail.com
+# 
 # TODO: help - return all possible options
+#
+# Copyright (c) 2013, Dan Brooks
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the distribution.
+# * Neither the name of the copyright holders nor the names of any
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
 from SocketServer import *
 import socket
 import threading
@@ -7,14 +38,15 @@ import sys
 
 
 class Served(object):
-    def __init__(self):
+    def __init__(self,port=9090):
         print ">> Initializing Server"
 
         # The socket server (listens for new connections)
         try:
-            self.server = ThreadingTCPServer(('127.0.0.1',9090),ConnectionHandler)
-        except:
+            self.server = ThreadingTCPServer(('',port),ConnectionHandler)
+        except Exception, e:
             print ">> Could not initialize the server. The port may already be in use"
+            print e
 
         # Add reference to this object, so we can make calls to the Served class
         self.server.served = self 
