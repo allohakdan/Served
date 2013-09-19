@@ -9,7 +9,7 @@
 # class Test(object):
 #   def foo(self):
 #       ...
-#   def bar(self,arg1,arg2):
+#   def bar(self,arg1,arg2,arg3):
 #       ...
 #
 # To serve this class, just make a subclass of Served like so
@@ -18,7 +18,7 @@
 # class Test(Served):
 #   def foo(self):
 #       ...
-#   def bar(self,arg1,arg2): 
+#   def bar(self,arg1,arg2,arg3): 
 #       ...
 #
 # Then all you have to do is instanciate your class and you are done! 
@@ -31,7 +31,7 @@
 # In a second window, connect a client
 #   $ nc 127.0.0.1 9090
 #   foo
-#   bar one two
+#   bar one 2 True
 #   baz
 #
 # Copyright (c) 2013, Dan Brooks
@@ -78,8 +78,9 @@ class Test(Served):
     def foo(self):
         return "foo2"
 
-    def bar(self,arg1,arg2):
-        print "bar =",arg1,arg2
+    def bar(self,arg1,arg2,arg3):
+        print "bar =",arg1,arg2+1,
+        print "Good" if arg3 is True else "Bad"
 
 if __name__ == "__main__":
     # Step 4: Instanciate your class!

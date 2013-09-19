@@ -35,6 +35,7 @@ from SocketServer import *
 import socket
 import threading
 import sys
+#from cgAutoCast import *
 
 
 class Served(object):
@@ -83,6 +84,10 @@ class Served(object):
             raise Exception("Method '%s' takes %d args, you provided '%d' (%s)"%
                 (text[0],method.func_code.co_argcount-1,len(text)-1," ".join(text[1:])))
 
+        # Autocast the function
+        #method = autocast(method)
+        method = Autocaster.autocast(method)
+
         # Execute the thing
         return method(*text[1:])
 
@@ -120,3 +125,47 @@ class ConnectionHandler(StreamRequestHandler):
         print ">> Closing Connection"
         self.running = False
 
+class Autocaster(object):
+    """ Class heavily based on cgAutoCast.py by sequenceGeek@github.com 
+    http://github.com/sequenceGeek/cgAutoCast 
+    """
+    @staticmethod
+    def ret_bool(val):
+        bools = {"True":True, "False":False}
+        if val in bools:
+            return bools[val]
+        raise ValueError("Invalid Boolean")
+    @staticmethod
+    def ret_none(val):
+        if val == "None":
+            return None
+        raise ValueError("Invalid None")
+    @staticmethod
+    def ret_list(val):
+        # TODO: All values must be same as first value
+        if ',' not in val:
+            raise ValueError("Not List")
+        vals = val.strip().split(',')
+
+        try:
+            vals = [Autocaster.estimateTypeFromString(x) for x in vals] 
+        except ValueError:
+            raise ValueError("Could not process list")
+    @staticmethod
+    def estimateTypeFromString(val):
+        if type(val) != type('string'):
+            return val
+        for typecaster in (Autocaster.ret_bool,int,float,Autocaster.ret_none,Autocaster.ret_list,str):
+            try:
+                return typecaster(val)
+            except ValueError:
+                pass
+    @staticmethod 
+    def autocast(fun):
+        def wrapped(*c,**d):
+            cp = [Autocaster.estimateTypeFromString(x) for x in c]
+            dp = dict( (i, Autocaster.estimateTypeFromString(j)) for (i,j) in d.items())
+            return fun(*cp,**dp)
+        return wrapped
+                
+        
